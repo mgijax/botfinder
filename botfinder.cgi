@@ -6,7 +6,6 @@
 #   them based on traffic patterns.
 
 import sys
-from test.warning_tests import outer
 sys.path.insert(0, '.')
 import time
 import cgi
