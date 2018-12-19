@@ -57,10 +57,10 @@ def getSelectedDates():
 
     [ month, day, year ] = getMonthDayYear(startTime)
     nowTuple = (year, month, day)
+    now = startTime
 
     [ month, day, year ] = getMonthDayYear(endTime)
     endTuple = (year, month, day)
-
 
     while nowTuple <= endTuple:
         dates.append('%s.%s.%s' % nowTuple)
