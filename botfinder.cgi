@@ -66,6 +66,7 @@ def getSelectedDates():
         dates.append('%s.%s.%s' % nowTuple)
         now = now + secondsPerDay
         [ month, day, year ] = getMonthDayYear(now)
+        nowTuple = (year, month, day)
 
     return dates
     
