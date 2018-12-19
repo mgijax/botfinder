@@ -5,6 +5,7 @@
 #   are sneaking through with traffic to the public server instead of the bot server, identifying
 #   them based on traffic patterns.
 
+import os
 import sys
 sys.path.insert(0, '.')
 import time
@@ -13,7 +14,7 @@ from shared import *
 
 ###--- globals ---###
 
-logDir = '/logs/www/public-news'    # where do the log files live?
+logDir = '/logs/www/public-new'     # where do the log files live?
 endTime = time.time()               # one hour of traffic up until now
 startTime = endTime - 3600.0
 
@@ -75,9 +76,11 @@ def getLogPaths():
     
     dirs = []
     for ymd in getSelectedDates():
-        path = os.path.join(logDir, ymd)
+        path = os.path.join(logDir, 'access.log.%s' % ymd)
         if os.path.exists(path):
             dirs.append(path)
+        else:
+            sys.stderr.write('Cannot find: %s' % path)
     return dirs
 
 def buildTable(title, tableID, sessions):
@@ -85,6 +88,11 @@ def buildTable(title, tableID, sessions):
     # returns a single string
     
     out = [
+        '<STYLE>',
+        '#%s td { border: 1px solid black; max-width:225px; padding: 3px; }' % tableID,
+        '#%s th { border: 1px solid black; padding: 3px; background-color: #DDDDDD; padding-left: 3px; padding-right: 15px; padding-top: 3px; padding-bottom: 3px;}' % tableID,
+        '#%s { border-collapse: collapse }' % tableID,
+        '</STYLE>',
         '<H3>%s</H3>' % title,
         '<TABLE ID="%s">' % tableID,
         '<THEAD>',
@@ -94,9 +102,9 @@ def buildTable(title, tableID, sessions):
         '<TH>Duration (sec)</TH>',
         '<TH>Total Hits</TH>',
         '<TH>Robot Likelihood</TH>',
-        '<TH>Peak Hits (30 min)</TH>',
-        '<TH>Peak Hits (1 min)</TH>',
-        '<TH>Avg Hits (1 min)</TH>',
+        '<TH>Peak Hits<br/>(30 min)</TH>',
+        '<TH>Peak Hits<br/>(1 min)</TH>',
+        '<TH>Avg Hits<br/>(1 min)</TH>',
         '<TH>Data Areas</TH>',
         '</TR>',
         '</THEAD>',
@@ -104,11 +112,12 @@ def buildTable(title, tableID, sessions):
         ]
     
     for session in sessions:
+        areaCounts = session.getTotalHitsByArea()
         areas = areaCounts.keys()
         areas.sort()
-        a = '%d Areas: %s (%d)' % (len(areas), areas[0], areaCounts[areas[0]]),
+        a = '%d Areas: %s (%d)' % (len(areas), areas[0], areaCounts[areas[0]])
         for area in areas[1:]:
-            a = a + ', %s (%d)' % (area, areaCounts[area]),
+            a = '%s, %s (%d)' % (a, area, areaCounts[area])
 
         out = out + [
             '<TR>'
@@ -116,26 +125,43 @@ def buildTable(title, tableID, sessions):
             '<TD>%s</TD>' % session.userAgent,
             '<TD>%s</TD>' % session.getDuration(),
             '<TD>%s</TD>' % session.getTotalHits(),
-            '<TD>%s</TD>' % session.getRobotLikelihood(),
+            '<TD>%0.3f</TD>' % session.getRobotLikelihood(),
             '<TD>%s</TD>' % session.getPeakHitsPer(1800),       # half hour = 1800 seconds
             '<TD>%s</TD>' % session.getPeakHitsPerMinute(),
-            '<TD>%s</TD>' % session.getHitsPerMinute(),
+            '<TD>%0.3f</TD>' % session.getHitsPerMinute(),
             '<TD>%s</TD>' % a,
             '</TR>',
             ]
-    out.join('</TBODY></TABLE>')
+    out.append('</TBODY></TABLE>')
     return '\n'.join(out)
 
 def report(tracker):
     # build the page of output for the given tracker
     
     out = [
+        'Content-type: text/html',
+        '',
         '<HTML><HEAD><TITLE>botfinder output</TITLE><HEAD><BODY>',
         '<H2>botfinder output</H2>',
-        '<H3>%s to %s</H3>' % (toDateTime(startTime), toDateTime(endTime)),
-        buildTable('Most Likely Robots', 'robotTable', tracker.getMostLikelyRobotSessions()),
+        '<i>Seeking previously unidentified robots from %s to %s</i><br/>' % (toDateTime(startTime), toDateTime(endTime)),
+        buildTable('Top-50 Most Likely Robot Sessions', 'robotTable', tracker.getMostLikelyRobotSessions(50)),
+        
+        # include JQuery libraries
+        '<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>',
+        '<link rel="stylesheet" href="https://cdn.datatables.net/1.10.19/css/jquery.dataTables.min.css" />',
+        '<script src="https://cdn.datatables.net/1.10.19/js/jquery.dataTables.min.js"></script>',
+        '<script>',
+        '''$(document).ready( function () {
+            $("#robotTable").DataTable( {paging : false} );
+            // sort by Robot Likelihood column, descending
+            $('th')[4].click();
+            $('th')[4].click();
+            } );''',
+        '</script>',
     ]
     out.append('</BODY></HTML>')
+    print '\n'.join(out)
+    return
 
 ###--- main program ---###
 

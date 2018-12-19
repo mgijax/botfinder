@@ -204,6 +204,6 @@ class LogIterator:
                     failed = failed + 1
                 line = fp.readline()
             fp.close()
-            print 'Read %d lines from %s; %d had errors; %d met criteria; %d were skipped (%0.3f sec total)' % (
-                read, filename, failed, kept, discarded, time.time() - startTime)
+#            print 'Read %d lines from %s; %d had errors; %d met criteria; %d were skipped (%0.3f sec total)' % (
+#                read, filename, failed, kept, discarded, time.time() - startTime)
         return

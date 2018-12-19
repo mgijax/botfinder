@@ -4,7 +4,9 @@
 from logParser import getFloatTime
 import time
 import re
-#import runCommand
+import sys
+sys.path.insert(0, '/usr/local/mgi/live/lib/python')
+import runCommand
 import urllib
 
 ###--- Globals ---###
@@ -34,15 +36,15 @@ def parseDateTime(datetime):
 def fetch(url):
     # retrieve the contents of the file at the given 'url' (as a list of strings)
     
-#    (stdout, stderr, exitCode) = runCommand.runCommand('curl %s' % url)
-#    if (exitCode != 0):
-#        raise Exception('Failed to read from GitHub via:  curl %s' % url)
-#    return stdout.split('\n')
+    (stdout, stderr, exitCode) = runCommand.runCommand('curl %s' % url)
+    if (exitCode != 0):
+        raise Exception('Failed to read from GitHub via:  curl %s' % url)
+    return stdout.split('\n')
 
-    x = urllib.urlopen(url)
-    if int(x.getcode()) != 200:
-        raise Exception('Failed to read from GitHub via urllib (code %s): %s' % (x.getcode(), url))
-    return map(lambda y: y.strip(), x.readlines())
+#    x = urllib.urlopen(url)
+#    if int(x.getcode()) != 200:
+#        raise Exception('Failed to read from GitHub via urllib (code %s): %s' % (x.getcode(), url))
+#    return map(lambda y: y.strip(), x.readlines())
     
 
 ###--- Classes ---###
