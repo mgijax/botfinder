@@ -182,6 +182,7 @@ def report(tracker):
         '<INPUT TYPE="text" NAME="endDate" SIZE="10" VALUE="%s" TITLE="end date (mm/dd/yyyy)"> ' % ed, 
         '<INPUT TYPE="text" NAME="endTime" SIZE="8" VALUE="%s" TITLE="end time (hh:mm:ss)">' % et, 
         '</i><INPUT TYPE="submit" VALUE="Go"><br/>',
+        '<i>Note that time periods longer than 15 hours tend to result in timeouts.<br/>',
         errorMessage,
         buildTable('Top-50 Most Likely Robot Sessions', 'robotTable', tracker.getMostLikelyRobotSessions(50)),
         

@@ -105,18 +105,21 @@ class SessionTracker:
         i = num                                         # iterates through sessions
         topSessions = self.oldSessions[:i]              # highest 'num' sessions found so far
         topSessions.sort(sortByRobotLikelihood)
-        cutoff = topSessions[0].getRobotLikelihood()    # minimium score in 'topSessions'
 
         sessionCount = len(self.oldSessions)
         i = i + 1
         
         while i < sessionCount:
             session = self.oldSessions[i]
-            if session.getRobotLikelihood() > cutoff:
-                topSessions[0] = session
-                topSessions.sort(sortByRobotLikelihood)
-                cutoff = topSessions[0].getRobotLikelihood()
-                
+            botLikelihood = session.getRobotLikelihood()
+            if botLikelihood > topSessions[0].cachedRobotScore:
+                j = 0
+                while (j < num) and (botLikelihood > topSessions[j].cachedRobotScore):
+                    j = j + 1
+
+                topSessions.insert(j - 1, session)
+                del topSessions[0]
+            
             i = i + 1 
         
         return topSessions
