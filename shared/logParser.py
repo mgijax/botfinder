@@ -3,6 +3,7 @@
 
 import time
 import re
+import sys
 
 ###--- Globals ---###
 
@@ -121,7 +122,11 @@ class LogEntry:
         if self.uri:
             pieces = self.uri.split('/')
             if len(pieces) >= 2:
-                return pieces[1]
+                area = pieces[1]
+                q = area.find('?')
+                if q >= 0:
+                    return area[:q]
+                return area 
         return 'N/A'
 
     def floatTime(self):
@@ -175,35 +180,35 @@ class LogIterator:
         self.errorHandler = errorHandler
         if not errorHandler:
             self.errorHandler = defaultErrorHandler
+        self.read = 0
+        self.failed = 0
+        self.kept = 0
+        self.discarded = 0
+        self.elapsedTime = 0.0
         return
     
     def go (self):
         # Purpose: sets this iterator to work, processing according to the Notes in the constructor
         # Notes: will return once all lines of all input filenames have been processed
         
+        startTime = time.time() 
         for filename in self.inputFilenames:
-            read = 0
-            failed = 0
-            kept = 0
-            discarded = 0
-            startTime = time.time()
-        
             fp = open(filename, 'r')
             line = fp.readline()
             while line:
-                read = read + 1
+                self.read = self.read + 1
                 try:
                     logEntry = LogEntry(line)
                     if self.logFilter.passes(logEntry):
                         self.entryHandler(logEntry)
-                        kept = kept + 1
+                        self.kept = self.kept + 1
                     else:
-                        discarded = discarded + 1
+                        self.discarded = self.discarded + 1
                 except:
                     self.errorHandler(line)
-                    failed = failed + 1
+                    self.failed = self.failed + 1
                 line = fp.readline()
             fp.close()
-#            print 'Read %d lines from %s; %d had errors; %d met criteria; %d were skipped (%0.3f sec total)' % (
-#                read, filename, failed, kept, discarded, time.time() - startTime)
+
+        self.elapsedTime = time.time() - startTime
         return

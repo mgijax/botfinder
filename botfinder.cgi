@@ -15,25 +15,47 @@ from shared import *
 ###--- globals ---###
 
 logDir = '/logs/www/public-new'     # where do the log files live?
-endTime = time.time()               # one hour of traffic up until now
+endTime = time.time()               # default: one hour of traffic up until now
 startTime = endTime - 3600.0
+error = None
 
 ###--- functions ---###
 
+def splitDateTime(dateTime):
+    # return (date, time) extracted from dateTime
+
+    i = dateTime.find(':')
+    if i < 0:
+        raise Exception('Could not find expected colon in "%s"' % dateTime)
+    return (dateTime[:i], dateTime[i+1:])
+
 def handleParameters():
-    global script, startTime, endTime
+    global startTime, endTime, error
+
+    sd, st = splitDateTime(toDateTime(startTime))
+    ed, et = splitDateTime(toDateTime(endTime))
 
     fs = cgi.FieldStorage()
     for key in fs.keys():
         if key == 'startDate':
-            pass
+            sd = fs[key].value
         elif key == 'endDate':
-            pass
+            ed = fs[key].value
         elif key == 'startTime':
-            pass
+            st = fs[key].value
         elif key == 'endTime':
-            pass
-        
+            et = fs[key].value
+    
+    try:
+        (year, month, day, hour, minute, second) = logFilter.parseDateTime('%s:%s' % (sd, st))
+        startTime = logParser.getFloatTime(year, month, day, hour, minute, second)
+
+        (year, month, day, hour, minute, second) = logFilter.parseDateTime('%s:%s' % (ed, et))
+        endTime = logParser.getFloatTime(year, month, day, hour, minute, second)
+    except Exception, e:
+        error = e
+        return
+    
     # ensure that the times are ordered properly
     if startTime > endTime:
         c = endTime
@@ -73,6 +95,7 @@ def getSelectedDates():
     
 def getLogPaths():
     # look at the global startTime and endTime and return a list of paths to any relevant log files
+    global error
     
     dirs = []
     for ymd in getSelectedDates():
@@ -80,7 +103,8 @@ def getLogPaths():
         if os.path.exists(path):
             dirs.append(path)
         else:
-            sys.stderr.write('Cannot find: %s' % path)
+            error = 'Cannot find: %s' % path
+            sys.stderr.write(error)
     return dirs
 
 def buildTable(title, tableID, sessions):
@@ -138,14 +162,30 @@ def buildTable(title, tableID, sessions):
 def report(tracker):
     # build the page of output for the given tracker
     
+    sd, st = splitDateTime(toDateTime(startTime))
+    ed, et = splitDateTime(toDateTime(endTime))
+
+    errorMessage = ''
+    if error:
+        errorMessage = '<B>Error: %s</B><P>' % error
+        
     out = [
         'Content-type: text/html',
         '',
         '<HTML><HEAD><TITLE>botfinder output</TITLE><HEAD><BODY>',
+        '<FORM ACTION="botfinder.cgi" METHOD="GET">',
         '<H2>botfinder output</H2>',
-        '<i>Seeking previously unidentified robots from %s to %s</i><br/>' % (toDateTime(startTime), toDateTime(endTime)),
+        '<i>Seeking previously unidentified robots from ',
+        '<INPUT TYPE="text" NAME="startDate" SIZE="10" VALUE="%s" TITLE="start date (mm/dd/yyyy)"> ' % sd, 
+        '<INPUT TYPE="text" NAME="startTime" SIZE="8" VALUE="%s" TITLE="start time (hh:mm:ss)"> ' % st, 
+        ' to ',
+        '<INPUT TYPE="text" NAME="endDate" SIZE="10" VALUE="%s" TITLE="end date (mm/dd/yyyy)"> ' % ed, 
+        '<INPUT TYPE="text" NAME="endTime" SIZE="8" VALUE="%s" TITLE="end time (hh:mm:ss)">' % et, 
+        '</i><INPUT TYPE="submit" VALUE="Go"><br/>',
+        errorMessage,
         buildTable('Top-50 Most Likely Robot Sessions', 'robotTable', tracker.getMostLikelyRobotSessions(50)),
         
+        '</FORM>',
         # include JQuery libraries
         '<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>',
         '<link rel="stylesheet" href="https://cdn.datatables.net/1.10.19/css/jquery.dataTables.min.css" />',

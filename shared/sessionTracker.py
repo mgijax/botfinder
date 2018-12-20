@@ -2,6 +2,7 @@
 # Purpose: to help identify "sessions" (by traffic pattern, not by cookie or other means) and
 #   let us do computations on them.
 
+import sys
 import math
 
 def endSlice(myList, num):
@@ -11,6 +12,14 @@ def endSlice(myList, num):
     sublist = myList[-num:]
     sublist.reverse()
     return sublist
+
+def scale (measurement):
+    # return a scaled (float) version of the given measurement, so large numbers aren't overwhelming
+    # when combined with smaller ones
+    
+    if measurement <= 0.0:
+        return 0.0
+    return math.log(measurement)
 
 class SessionTracker:
     # Is: a tracker that helps sort LogEntry objects into appropriate sessions
@@ -23,7 +32,6 @@ class SessionTracker:
         self.oldSessions = []           # list of Session o bjects that are no longer active
         self.maxGap = maxGap
         self.latestTime = 0.0           # latest time we've seen so far
-        self.calibrated = False
         return
     
     def track(self, entry):
@@ -48,11 +56,6 @@ class SessionTracker:
         for (ip, session) in self.activeSessions.items():
             self.oldSessions.append(session) 
             self.activeSessions = {}
-
-        if not self.calibrated:
-            scalers = self.calibrate()
-            for session in self.oldSessions:
-                session.setScalers(scalers)
         return
     
     def report(self):
@@ -90,50 +93,33 @@ class SessionTracker:
     def getMostLikelyRobotSessions(self, num = 25):
         # get the top 'num' sessions scored from most likely to be a robot to least
         self.finalize()
-        
         def sortByRobotLikelihood(a, b):
             # inner function; used for sorting in this method
             return cmp(a.getRobotLikelihood(), b.getRobotLikelihood())
         
-        self.oldSessions.sort(sortByRobotLikelihood)
-        return endSlice(self.oldSessions, num)
-    
-    def calibrate(self):
-        # Take some measurements to calibrate the measurements used in determining robot likelihood.
+        # Sorting is too slow for a large number of sessions; we need to work with a smaller list.
+        # We'll keep the 'num' highest scoring sessions seen so far.  Any session with a lower score
+        # doesn't need to be considered further.  Any session with a higher score can get put in the
+        # list and a lower scoring one will get bumped out.
 
-        peakHitsHalfHour = Scaler()
-        averageHitsMinute = Scaler()
-        peakHitsOneMinute = Scaler()
-        totalHits = Scaler()
-        duration = Scaler()
-        dataAreaCount = Scaler()
+        i = num                                         # iterates through sessions
+        topSessions = self.oldSessions[:i]              # highest 'num' sessions found so far
+        topSessions.sort(sortByRobotLikelihood)
+        cutoff = topSessions[0].getRobotLikelihood()    # minimium score in 'topSessions'
 
-        halfHour = 60 * 30
-        for session in self.oldSessions:
-            peakHitsHalfHour.update(session.getPeakHitsPer(halfHour))
-            averageHitsMinute.update(session.getHitsPerMinute())
-            peakHitsOneMinute.update(session.getPeakHitsPerMinute())
-            totalHits.update(session.getTotalHits())
-            duration.update(session.getDuration())
-            dataAreaCount.update(len(session.getTotalHitsByArea()))
+        sessionCount = len(self.oldSessions)
+        i = i + 1
         
-        self.calibrated = True
-        return (peakHitsHalfHour, averageHitsMinute, peakHitsOneMinute, totalHits, duration, dataAreaCount)
-
-class Scaler:
-    def __init__ (self, maxValue = 0.0):
-        self.maxValue = 1.0 * maxValue
-        return
-    
-    def update (self, maxValue):
-        self.maxValue = max(self.maxValue, maxValue)
-        return
-    
-    def scale (self, measurement):
-#        return measurement / self.maxValue
-        if measurement <= 0:
-            return 0
-        return math.log(measurement)
+        while i < sessionCount:
+            session = self.oldSessions[i]
+            if session.getRobotLikelihood() > cutoff:
+                topSessions[0] = session
+                topSessions.sort(sortByRobotLikelihood)
+                cutoff = topSessions[0].getRobotLikelihood()
+                
+            i = i + 1 
+        
+        return topSessions
     
 class Session:
     # Is: a group of hits from a single IP address that occurred with a gap between hits no larger
@@ -147,15 +133,10 @@ class Session:
         self.hitsByArea = {}
         self.ip = None
         self.cachedRobotScore = None
-        self.scalers = None
         self.userAgent = None
+        self.peakCache = {}         # maps from number of seconds to peak traffic for that size time slice
         return
     
-    def setScalers(self, scalerTuple):
-        # set the scalers needed for proper robot detection (normalizing measurements)
-        self.scalers = scalerTuple
-        return
-        
     def getExpirationTime (self):
         # return the time (in seconds) at which a hit can no longer be part of this session
         return self.latestTime + self.maxGap
@@ -231,16 +212,19 @@ class Session:
         if not self.hits:
             return 0.0
         
-        bins = []       # each bin is [start time, end time, count of hits]
-        for entryTime in self.hits:
-            bins.append( [entryTime, entryTime + seconds, 0] )
+        if seconds not in self.peakCache:
+            bins = []       # each bin is [start time, end time, count of hits]
+            for entryTime in self.hits:
+                bins.append( [entryTime, entryTime + seconds, 0] )
             
-        for entryTime in self.hits:
-            for bin in bins:
-                if bin[0] <= entryTime <= bin[1]:
-                    bin[2] = bin[2] + 1
+            for entryTime in self.hits:
+                for bin in bins:
+                    if bin[0] <= entryTime <= bin[1]:
+                        bin[2] = bin[2] + 1
 
-        return max(map(lambda bin: bin[2], bins))
+            peak = max(map(lambda bin: bin[2], bins))
+            self.peakCache[seconds] = peak
+        return self.peakCache[seconds]
 
     def getPeakHitsPerMinute (self):
         # return the highest number of hits in this session within a single minute
@@ -249,9 +233,6 @@ class Session:
     
     def getRobotLikelihood (self):
         # get a score for how likely this session is to be a robot rather than a human user.
-        
-        if not self.scalers:
-            raise Exception("Forgot to pass scalers to Session objects")
         
         if self.cachedRobotScore == None:
             # Increased robot likelihood for:
@@ -262,14 +243,11 @@ class Session:
             #    5. long session duration
             #    6. large number of different data areas
         
-            (peakHitsHalfHour, averageHitsMinute, peakHitsOneMinute, totalHits, duration, dataAreaCount) = self.scalers
-
-            self.cachedRobotScore = 0.0
-            self.cachedRobotScore = self.cachedRobotScore + 0.35 * peakHitsHalfHour.scale(self.getPeakHitsPer(1800))
-            self.cachedRobotScore = self.cachedRobotScore + 0.30 * averageHitsMinute.scale(self.getHitsPerMinute())
-            self.cachedRobotScore = self.cachedRobotScore + 0.25 * peakHitsOneMinute.scale(self.getPeakHitsPerMinute())
-            self.cachedRobotScore = self.cachedRobotScore + 0.20 * totalHits.scale(self.getTotalHits()) 
-            self.cachedRobotScore = self.cachedRobotScore + 0.15 * duration.scale(self.getDuration()) 
-            self.cachedRobotScore = self.cachedRobotScore + 0.05 * dataAreaCount.scale(len(self.getTotalHitsByArea()))
+            self.cachedRobotScore = 0.35 * scale(self.getPeakHitsPer(1800)) \
+                + 0.30 * scale(self.getHitsPerMinute()) \
+                + 0.25 * scale(self.getPeakHitsPerMinute()) \
+                + 0.20 * scale(self.getTotalHits()) \
+                + 0.15 * scale(self.getDuration()) \
+                + 0.05 * scale(len(self.getTotalHitsByArea()))
 
         return self.cachedRobotScore
