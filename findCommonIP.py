@@ -1,4 +1,4 @@
-#!/usr/local/bin/python
+#!./python
 
 # Name: findCommonIP.py
 # Purpose: find the IP addresses with the most requests
@@ -32,17 +32,17 @@ def countCompare(a, b):
     return cmp(a[0], b[0])
 
 def report():
-    items = countByIP.items()
+    items = list(countByIP.items())
     items.sort(countCompare)
     for (ip, count) in items[:15]:
-        print '%10d %s %s' % (count, ip, agentByIP[ip])
-    print
-    print '%d lines could not be parsed; common offenders:' % logParser.getFaultyLineCount()
+        print('%10d %s %s' % (count, ip, agentByIP[ip]))
+    print()
+    print('%d lines could not be parsed; common offenders:' % logParser.getFaultyLineCount())
     
     items = logParser.getFaultyLineSources()
     items.sort(countCompare)
     for (ip, count) in items[:15]:
-        print '%10d %s' % (count, ip)
+        print('%10d %s' % (count, ip))
     
     return
     

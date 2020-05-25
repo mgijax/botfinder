@@ -53,15 +53,15 @@ class SessionTracker:
     
     def finalize(self):
         # move all active Session objects tob e considered 'old'
-        for (ip, session) in self.activeSessions.items():
+        for (ip, session) in list(self.activeSessions.items()):
             self.oldSessions.append(session) 
             self.activeSessions = {}
         return
     
     def report(self):
-        print 'Active Sessions: %d' % len(self.activeSessions)
-        print 'Old Sessions: %d' % len(self.oldSessions)
-        print
+        print('Active Sessions: %d' % len(self.activeSessions))
+        print('Old Sessions: %d' % len(self.oldSessions))
+        print()
         return
     
     def getSessionCount(self):
@@ -225,7 +225,7 @@ class Session:
                     if bin[0] <= entryTime <= bin[1]:
                         bin[2] = bin[2] + 1
 
-            peak = max(map(lambda bin: bin[2], bins))
+            peak = max([bin[2] for bin in bins])
             self.peakCache[seconds] = peak
         return self.peakCache[seconds]
 

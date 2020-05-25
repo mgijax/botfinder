@@ -1,13 +1,12 @@
 # Name: logFilter.py
 # Purpose: library for filtering LogEntry objects (defined in logParser.py)
 
-from logParser import getFloatTime
+from .logParser import getFloatTime
 import time
 import re
 import sys
 sys.path.insert(0, '/usr/local/mgi/live/lib/python')
-import runCommand
-import urllib
+import subprocess
 
 ###--- Globals ---###
 
@@ -36,16 +35,11 @@ def parseDateTime(datetime):
 def fetch(url):
     # retrieve the contents of the file at the given 'url' (as a list of strings)
     
-    (stdout, stderr, exitCode) = runCommand.runCommand('curl %s' % url)
+    proc = subprocess.run('curl %s' % url, shell=True, capture_output=True, encoding='utf-8')
+    if proc.returncode != 0:
     if (exitCode != 0):
         raise Exception('Failed to read from GitHub via:  curl %s' % url)
-    return stdout.split('\n')
-
-#    x = urllib.urlopen(url)
-#    if int(x.getcode()) != 200:
-#        raise Exception('Failed to read from GitHub via urllib (code %s): %s' % (x.getcode(), url))
-#    return map(lambda y: y.strip(), x.readlines())
-    
+    return proc.stdout.split('\n')
 
 ###--- Classes ---###
 

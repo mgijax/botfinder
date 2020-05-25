@@ -1,4 +1,4 @@
-#!/usr/local/bin/python
+#!./python
 
 # Name: botfinder.cgi
 # Purpose: Similar to findBurstTraffic.py, but wrapped up for web access -- try to identify bots that
@@ -36,7 +36,7 @@ def handleParameters():
     ed, et = splitDateTime(toDateTime(endTime))
 
     fs = cgi.FieldStorage()
-    for key in fs.keys():
+    for key in list(fs.keys()):
         if key == 'startDate':
             sd = fs[key].value
         elif key == 'endDate':
@@ -52,7 +52,7 @@ def handleParameters():
 
         (year, month, day, hour, minute, second) = logFilter.parseDateTime('%s:%s' % (ed, et))
         endTime = logParser.getFloatTime(year, month, day, hour, minute, second)
-    except Exception, e:
+    except Exception as e:
         error = e
         return
     
@@ -137,7 +137,7 @@ def buildTable(title, tableID, sessions):
     
     for session in sessions:
         areaCounts = session.getTotalHitsByArea()
-        areas = areaCounts.keys()
+        areas = list(areaCounts.keys())
         areas.sort()
         a = '%d Areas: %s (%d)' % (len(areas), areas[0], areaCounts[areas[0]])
         for area in areas[1:]:
@@ -201,7 +201,7 @@ def report(tracker):
         '</script>',
     ]
     out.append('</BODY></HTML>')
-    print '\n'.join(out)
+    print('\n'.join(out))
     return
 
 ###--- main program ---###

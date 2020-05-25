@@ -1,4 +1,4 @@
-#!/usr/local/bin/python
+#!./python
 
 # Name: findBurstTraffic.py
 # Purpose: find IP addresses that have been issuing requests frequently
@@ -18,26 +18,26 @@ tracker = sessionTracker.SessionTracker()
 ###--- Functions ---###
 
 def reportSection(title, sessions):
-    print title
-    print '-' * len(title)
+    print(title)
+    print('-' * len(title))
     for session in sessions:
-        print 'IP: %s' % session.ip
-        print 'User-Agent: %s' % session.userAgent
-        print 'Duration (sec): %d' % session.getDuration()
-        print 'Total Hits: %d' % session.getTotalHits()
-        print 'Robot Likelihood: %0.3f' % session.getRobotLikelihood()
-        print 'Peak Hits (half hour): %d' % session.getPeakHitsPer(1800)
-        print 'Hits per Minute: %0.3f' % session.getHitsPerMinute()
-        print 'Peak Hits (1 minute): %d' % session.getPeakHitsPerMinute()
+        print('IP: %s' % session.ip)
+        print('User-Agent: %s' % session.userAgent)
+        print('Duration (sec): %d' % session.getDuration())
+        print('Total Hits: %d' % session.getTotalHits())
+        print('Robot Likelihood: %0.3f' % session.getRobotLikelihood())
+        print('Peak Hits (half hour): %d' % session.getPeakHitsPer(1800))
+        print('Hits per Minute: %0.3f' % session.getHitsPerMinute())
+        print('Peak Hits (1 minute): %d' % session.getPeakHitsPerMinute())
         areaCounts = session.getTotalHitsByArea()
-        areas = areaCounts.keys()
+        areas = list(areaCounts.keys())
         areas.sort()
-        print 'Data Areas (%d): %s (%d)' % (len(areas), areas[0], areaCounts[areas[0]]),
+        print('Data Areas (%d): %s (%d)' % (len(areas), areas[0], areaCounts[areas[0]]), end=' ')
         for area in areas[1:]:
-            print ', %s (%d)' % (area, areaCounts[area]),
-        print
-        print
-    print
+            print(', %s (%d)' % (area, areaCounts[area]), end=' ')
+        print()
+        print()
+    print()
     return
 
 def report():
