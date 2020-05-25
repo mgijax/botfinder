@@ -18,6 +18,7 @@ logDir = '/logs/www/public-new'     # where do the log files live?
 endTime = time.time()               # default: one hour of traffic up until now
 startTime = endTime - 3600.0
 error = None
+runBegan = endTime                  # time at which this script's run began
 
 ###--- functions ---###
 
@@ -117,7 +118,8 @@ def buildTable(title, tableID, sessions):
         '#%s th { border: 1px solid black; padding: 3px; background-color: #DDDDDD; padding-left: 3px; padding-right: 15px; padding-top: 3px; padding-bottom: 3px;}' % tableID,
         '#%s { border-collapse: collapse }' % tableID,
         '</STYLE>',
-        '<H3>%s</H3>' % title,
+        '<H3 style="margin-block-end: 0em">%s</H3>' % title,
+        '<I>Results returned in: %9.3f seconds</I><BR>' % (time.time() - runBegan),
         '<TABLE ID="%s">' % tableID,
         '<THEAD>',
         '<TR ID="headerRow">',
