@@ -27,10 +27,8 @@ def uaTracker(entry):
         ipByAgent[ua] = { entry.ip : 1 }
     return
 
-def countCompare(a, b):
-    if a[1] != b[1]:
-        return cmp(b[1], a[1])      # swapped to sort descending
-    return cmp(a[0], b[0])
+def countCompare(a):
+    return (a[1], a[0])
 
 def commonIpPrefix(ipSet):
     prefix = [ '', '', '', '' ]
@@ -51,7 +49,7 @@ def commonIpPrefix(ipSet):
 
 def report():
     items = list(countByUserAgent.items())
-    items.sort(countCompare)
+    items.sort(key=countCompare)
     print('Top 25 Hitters per User-Agent:')
     print('------------------------------')
     for (agent, count) in items[:25]:

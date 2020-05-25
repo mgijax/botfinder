@@ -72,30 +72,30 @@ class SessionTracker:
         # get the top 'num' sessions sorted by duration from most to least
         self.finalize()
         
-        def sortByDuration(a, b):
+        def sortByDuration(a):
             # inner function; used for sorting in this method
-            return cmp(a.getDuration(), b.getDuration())
+            return a.getDuration()
         
-        self.oldSessions.sort(sortByDuration)
+        self.oldSessions.sort(key=sortByDuration)
         return endSlice(self.oldSessions, num)
     
     def getSessionsWithMostHits(self, num = 25):
         # get the top 'num' sessions sorted by total hit count from most to least
         self.finalize()
 
-        def sortByTotalHits(a, b):
+        def sortByTotalHits(a):
             # inner function; used for sorting in this method
-            return cmp(a.getTotalHits(), b.getTotalHits())
+            return a.getTotalHits()
         
-        self.oldSessions.sort(sortByTotalHits)
+        self.oldSessions.sort(key=sortByTotalHits)
         return endSlice(self.oldSessions, num)
     
     def getMostLikelyRobotSessions(self, num = 25):
         # get the top 'num' sessions scored from most likely to be a robot to least
         self.finalize()
-        def sortByRobotLikelihood(a, b):
+        def sortByRobotLikelihood(a):
             # inner function; used for sorting in this method
-            return cmp(a.getRobotLikelihood(), b.getRobotLikelihood())
+            return a.getRobotLikelihood()
         
         # Sorting is too slow for a large number of sessions; we need to work with a smaller list.
         # We'll keep the 'num' highest scoring sessions seen so far.  Any session with a lower score
@@ -104,7 +104,7 @@ class SessionTracker:
 
         i = num                                         # iterates through sessions
         topSessions = self.oldSessions[:i]              # highest 'num' sessions found so far
-        topSessions.sort(sortByRobotLikelihood)
+        topSessions.sort(key=sortByRobotLikelihood)
 
         sessionCount = len(self.oldSessions)
         i = i + 1

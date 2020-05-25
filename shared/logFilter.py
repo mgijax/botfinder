@@ -37,7 +37,6 @@ def fetch(url):
     
     proc = subprocess.run('curl %s' % url, shell=True, capture_output=True, encoding='utf-8')
     if proc.returncode != 0:
-    if (exitCode != 0):
         raise Exception('Failed to read from GitHub via:  curl %s' % url)
     return proc.stdout.split('\n')
 
