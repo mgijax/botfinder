@@ -1,4 +1,4 @@
-#!/usr/local/bin/python
+#!/opt/python3.8/bin/python3
 
 # Name: findBurstTraffic.py
 # Purpose: find IP addresses that have been issuing requests frequently

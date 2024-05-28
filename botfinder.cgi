@@ -1,4 +1,4 @@
-#!/usr/local/bin/python
+#!/opt/python3.8/bin/python3
 
 # Name: botfinder.cgi
 # Purpose: Similar to findBurstTraffic.py, but wrapped up for web access -- try to identify bots that
