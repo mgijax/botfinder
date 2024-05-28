@@ -1,4 +1,4 @@
-#!/opt/python3.8/bin/python3
+#!./python
 
 # Name: findCommonUserAgent.py
 # Purpose: find the User-Agents with the most requests
@@ -27,10 +27,8 @@ def uaTracker(entry):
         ipByAgent[ua] = { entry.ip : 1 }
     return
 
-def countCompare(a, b):
-    if a[1] != b[1]:
-        return cmp(b[1], a[1])      # swapped to sort descending
-    return cmp(a[0], b[0])
+def countCompare(a):
+    return (a[1], a[0])
 
 def commonIpPrefix(ipSet):
     prefix = [ '', '', '', '' ]
@@ -50,12 +48,12 @@ def commonIpPrefix(ipSet):
     return "[from: %s]" % prefixStr
 
 def report():
-    items = countByUserAgent.items()
-    items.sort(countCompare)
-    print 'Top 25 Hitters per User-Agent:'
-    print '------------------------------'
+    items = list(countByUserAgent.items())
+    items.sort(key=countCompare)
+    print('Top 25 Hitters per User-Agent:')
+    print('------------------------------')
     for (agent, count) in items[:25]:
-        print '%10d %s %s' % (count, commonIpPrefix(ipByAgent[agent].keys()), agent)
+        print('%10d %s %s' % (count, commonIpPrefix(list(ipByAgent[agent].keys())), agent))
     return
     
 ###--- Main Program ---###

@@ -1,4 +1,4 @@
-#!/opt/python3.8/bin/python3
+#!./python
 
 # Name: findCommonIP.py
 # Purpose: find the IP addresses with the most requests
@@ -26,23 +26,21 @@ def ipTracker(entry):
         agentByIP[ip] = entry.userAgent
     return
 
-def countCompare(a, b):
-    if a[1] != b[1]:
-        return cmp(b[1], a[1])      # swapped to sort descending
-    return cmp(a[0], b[0])
+def countCompare(ab):
+    return (a[1], a[0])
 
 def report():
-    items = countByIP.items()
-    items.sort(countCompare)
+    items = list(countByIP.items())
+    items.sort(key=countCompare)
     for (ip, count) in items[:15]:
-        print '%10d %s %s' % (count, ip, agentByIP[ip])
-    print
-    print '%d lines could not be parsed; common offenders:' % logParser.getFaultyLineCount()
+        print('%10d %s %s' % (count, ip, agentByIP[ip]))
+    print()
+    print('%d lines could not be parsed; common offenders:' % logParser.getFaultyLineCount())
     
     items = logParser.getFaultyLineSources()
-    items.sort(countCompare)
+    items.sort(key=countCompare)
     for (ip, count) in items[:15]:
-        print '%10d %s' % (count, ip)
+        print('%10d %s' % (count, ip))
     
     return
     

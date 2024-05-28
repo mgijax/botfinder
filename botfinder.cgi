@@ -1,4 +1,4 @@
-#!/opt/python3.8/bin/python3
+#!./python
 
 # Name: botfinder.cgi
 # Purpose: Similar to findBurstTraffic.py, but wrapped up for web access -- try to identify bots that
@@ -18,6 +18,7 @@ logDir = '/logs/www/public-new'     # where do the log files live?
 endTime = time.time()               # default: one hour of traffic up until now
 startTime = endTime - 3600.0
 error = None
+runBegan = endTime                  # time at which this script's run began
 
 ###--- functions ---###
 
@@ -36,7 +37,7 @@ def handleParameters():
     ed, et = splitDateTime(toDateTime(endTime))
 
     fs = cgi.FieldStorage()
-    for key in fs.keys():
+    for key in list(fs.keys()):
         if key == 'startDate':
             sd = fs[key].value
         elif key == 'endDate':
@@ -52,7 +53,7 @@ def handleParameters():
 
         (year, month, day, hour, minute, second) = logFilter.parseDateTime('%s:%s' % (ed, et))
         endTime = logParser.getFloatTime(year, month, day, hour, minute, second)
-    except Exception, e:
+    except Exception as e:
         error = e
         return
     
@@ -117,7 +118,8 @@ def buildTable(title, tableID, sessions):
         '#%s th { border: 1px solid black; padding: 3px; background-color: #DDDDDD; padding-left: 3px; padding-right: 15px; padding-top: 3px; padding-bottom: 3px;}' % tableID,
         '#%s { border-collapse: collapse }' % tableID,
         '</STYLE>',
-        '<H3>%s</H3>' % title,
+        '<H3 style="margin-block-end: 0em">%s</H3>' % title,
+        '<I>Results returned in: %9.3f seconds</I><BR>' % (time.time() - runBegan),
         '<TABLE ID="%s">' % tableID,
         '<THEAD>',
         '<TR ID="headerRow">',
@@ -137,7 +139,7 @@ def buildTable(title, tableID, sessions):
     
     for session in sessions:
         areaCounts = session.getTotalHitsByArea()
-        areas = areaCounts.keys()
+        areas = list(areaCounts.keys())
         areas.sort()
         a = '%d Areas: %s (%d)' % (len(areas), areas[0], areaCounts[areas[0]])
         for area in areas[1:]:
@@ -201,7 +203,7 @@ def report(tracker):
         '</script>',
     ]
     out.append('</BODY></HTML>')
-    print '\n'.join(out)
+    print('\n'.join(out))
     return
 
 ###--- main program ---###
