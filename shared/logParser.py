@@ -51,7 +51,7 @@ def getFaultyLineCount():
     return badLineCount
 
 def getFaultyLineSources():
-    return badLineSource.items()
+    return list(badLineSource.items())
 
 def getNumericMonth(abbrev):
     if abbrev in months:
@@ -101,16 +101,16 @@ class LogEntry:
     
     def out(self):
         # print this log entry (for debugging)
-        print 'IP: %s' % self.ip
-        print 'Date: %s %s, %s' % (self.month, self.day, self.year)
-        print 'Time: %s:%s:%s' % (self.hour, self.minute, self.second)
-        print 'Timezone: %s' % self.timezone
-        print 'Request: %s %s' % (self.method, self.uri)
-        print 'Protocol: %s (version %s)' % (self.protocol, self.version)
-        print 'Status: %s' % self.status
-        print 'Sent: %s bytes' % self.bytes
-        print 'Referrer: %s' % self.referrer
-        print 'User-Agent: %s' % self.userAgent
+        print('IP: %s' % self.ip)
+        print('Date: %s %s, %s' % (self.month, self.day, self.year))
+        print('Time: %s:%s:%s' % (self.hour, self.minute, self.second))
+        print('Timezone: %s' % self.timezone)
+        print('Request: %s %s' % (self.method, self.uri))
+        print('Protocol: %s (version %s)' % (self.protocol, self.version))
+        print('Status: %s' % self.status)
+        print('Sent: %s bytes' % self.bytes)
+        print('Referrer: %s' % self.referrer)
+        print('User-Agent: %s' % self.userAgent)
         return
 
     def date(self):

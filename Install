@@ -1,0 +1,11 @@
+#!/bin/sh
+
+if [ ! -e Configuration ]; then
+        echo "Failed: missing Configuration file"
+        exit 1
+fi
+
+PYTHON=`grep '^PYTHON' Configuration | awk '{print $2}'`
+ln -s $PYTHON python
+
+echo "Done"
