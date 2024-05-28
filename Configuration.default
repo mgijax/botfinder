@@ -1,0 +1,18 @@
+#!/bin/csh
+
+#
+# Configuration file for the load administration product (loadadmin)
+#
+
+if ( ${?MGICONFIG} == 0 ) then
+    setenv MGICONFIG /usr/local/mgi/live/mgiconfig
+endif
+
+source ${MGICONFIG}/master.config.csh
+
+setenv HOST `uname -n`
+
+#
+# Logs directory
+#
+setenv LOGSDIR ${DATALOADSOUTPUT}/mgi/loadadmin/logs

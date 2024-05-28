@@ -5,7 +5,4 @@ if [ ! -e Configuration ]; then
         exit 1
 fi
 
-PYTHON=`grep '^PYTHON' Configuration | awk '{print $2}'`
-ln -s $PYTHON python
-
 echo "Done"
